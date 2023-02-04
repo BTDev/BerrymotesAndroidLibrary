@@ -6,7 +6,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.ParcelFileDescriptor;
 import android.util.DisplayMetrics;
+
+import java.io.FileDescriptor;
 
 public class ScalingEmoteLoader extends ContextWrapper implements EmoteLoader {
 	/**
@@ -28,11 +31,26 @@ public class ScalingEmoteLoader extends ContextWrapper implements EmoteLoader {
 		BitmapFactory.Options options = new BitmapFactory.Options();
 		options.inDensity = DisplayMetrics.DENSITY_MEDIUM;		
 		
-		Bitmap bitmap = BitmapFactory.decodeFile(path, options);		
+		Bitmap bitmap = BitmapFactory.decodeFile(path, options);
 		if (bitmap != null) {
 			drawable = new BitmapDrawable(getResources(), bitmap);
 		}
 		
+		return drawable;
+	}
+
+	@Override
+	public Drawable fromFileDescriptor(FileDescriptor fd) {
+		Drawable drawable = null;
+
+		BitmapFactory.Options options = new BitmapFactory.Options();
+		options.inDensity = DisplayMetrics.DENSITY_MEDIUM;
+
+		Bitmap bitmap = BitmapFactory.decodeFileDescriptor(fd, null, options);
+		if (bitmap != null) {
+			drawable = new BitmapDrawable(getResources(), bitmap);
+		}
+
 		return drawable;
 	}
 }

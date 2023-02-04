@@ -20,6 +20,9 @@
 package com.trellmor.berrymotes.loader;
 
 import android.graphics.drawable.Drawable;
+import android.os.ParcelFileDescriptor;
+
+import java.io.FileDescriptor;
 
 /**
  * Emote Drawable loader
@@ -35,4 +38,6 @@ public interface EmoteLoader {
 	 * @return Emote Drawable
 	 */
 	Drawable fromPath(String path);
+
+	Drawable fromFileDescriptor(FileDescriptor fd);
 }

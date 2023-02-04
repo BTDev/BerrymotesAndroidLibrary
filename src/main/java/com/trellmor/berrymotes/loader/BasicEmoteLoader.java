@@ -19,7 +19,16 @@
  */
 package com.trellmor.berrymotes.loader;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.util.DisplayMetrics;
+
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Basic emote loaders
@@ -36,4 +45,12 @@ public class BasicEmoteLoader implements EmoteLoader {
 		return Drawable.createFromPath(path);
 	}
 
+	@Override
+	public Drawable fromFileDescriptor(FileDescriptor fd) {
+		try (FileInputStream stream = new FileInputStream(fd)) {
+			return Drawable.createFromStream(stream, "emote.png");
+		} catch (IOException e) {
+			return null;
+		}
+	}
 }

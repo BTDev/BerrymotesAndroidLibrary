@@ -25,6 +25,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.ParcelFileDescriptor;
 import android.text.Html.ImageGetter;
 import android.util.Log;
 import android.util.LruCache;
@@ -32,7 +33,9 @@ import android.util.LruCache;
 import com.trellmor.berrymotes.loader.BasicEmoteLoader;
 import com.trellmor.berrymotes.loader.EmoteLoader;
 import com.trellmor.berrymotes.provider.EmotesContract;
+import com.trellmor.berrymotes.provider.FileContract;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -51,7 +54,7 @@ public class EmoteGetter implements ImageGetter {
 
 	private final ContentResolver mResolver;
 
-	private final String[] PROJECTION = {EmotesContract.Emote.COLUMN_IMAGE,
+	private final String[] PROJECTION = {EmotesContract.Emote.COLUMN_NAME,
 			EmotesContract.Emote.COLUMN_APNG, EmotesContract.Emote.COLUMN_DELAY};
 	private static final LruCache<String, Drawable> mCache = new LruCache<>(50);
 	private static final LruCache<String, AnimationEmote> mAnimationCache = new LruCache<>(10);
@@ -107,8 +110,8 @@ public class EmoteGetter implements ImageGetter {
 		if (cursor != null && cursor.getCount() > 0) {
 			cursor.moveToFirst();
 
-			final int POS_IMAGE = cursor
-					.getColumnIndex(EmotesContract.Emote.COLUMN_IMAGE);
+			final int POS_NAME = cursor
+					.getColumnIndex(EmotesContract.Emote.COLUMN_NAME);
 
 			if (cursor.getCount() > 1
 					&& cursor.getInt(cursor
@@ -121,23 +124,23 @@ public class EmoteGetter implements ImageGetter {
 
 				try {
 					do {
-						String path = cursor.getString(POS_IMAGE);
-						Drawable frame = mLoader.fromPath(path);
+						ParcelFileDescriptor fd = mResolver.openFileDescriptor(FileContract.getUriForEmote(cursor.getString(POS_NAME), false), "r");
+						Drawable frame =  mLoader.fromFileDescriptor(fd.getFileDescriptor());
 						if (frame != null) {
 							ae.addFrame(frame, cursor.getInt(POS_DELAY));
 						}
 					} while (cursor.moveToNext());
 					d = ae.newDrawable();
 					mAnimationCache.put(source, ae);
-				} catch (OutOfMemoryError e) {
+				} catch (OutOfMemoryError | FileNotFoundException e) {
 					d = null;
 					Log.e(TAG, "Failed to load " + source, e);
 				}
 			} else {
-				String path = cursor.getString(POS_IMAGE);
 				try {
-					d = mLoader.fromPath(path);
-				} catch (OutOfMemoryError e) {
+					ParcelFileDescriptor fd = mResolver.openFileDescriptor(FileContract.getUriForEmote(cursor.getString(POS_NAME), false), "r");
+					d = mLoader.fromFileDescriptor(fd.getFileDescriptor());
+				} catch (OutOfMemoryError | FileNotFoundException e) {
 					d = null;
 					Log.e(TAG, "Failed to load " + source, e);
 				}
